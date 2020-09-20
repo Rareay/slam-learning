@@ -18,6 +18,11 @@ include_directories("/usr/include/eigen3")
 find_package(OpenCV 3.4.7 REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
+# Boost
+#find_package(Boost REQUIRED)
+find_package(Boost REQUIRED COMPONENTS filesystem system thread date_time)
+include_directories(${Boost_INCLUDE_DIRS})
+
 # pangolin
 find_package(Pangolin REQUIRED)
 include_directories(${Pangolin_INCLUDE_DIRS})
@@ -48,6 +53,7 @@ include_directories(${CSPARSE_INCLUDE_DIR})
 
 set(THIRD_PARTY_LIBS
         ${OpenCV_LIBS}
+        ${Boost_LIBRARIES}
         ${Sophus_LIBRARIES}
         ${Pangolin_LIBRARIES} GL GLU GLEW glut
         g2o_core g2o_stuff g2o_types_sba g2o_solver_csparse g2o_csparse_extension
@@ -59,6 +65,7 @@ set(THIRD_PARTY_LIBS
         )
 
 enable_testing()
+
 
 ############### source and test ######################
 include_directories(${PROJECT_SOURCE_DIR}/include)
