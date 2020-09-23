@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(myslam)
+project(trslam)
 
 set(CMAKE_BUILD_TYPE Release)
 
@@ -44,8 +44,8 @@ include_directories(${GLOG_INCLUDE_DIRS})
 #include_directories(${GTEST_INCLUDE_DIRS})
 
 # gflags
-find_package(GFlags REQUIRED)
-include_directories(${GFLAGS_INCLUDE_DIRS})
+#find_package(GFlags REQUIRED)
+#include_directories(${GFLAGS_INCLUDE_DIRS})
 
 # csparse
 find_package(CSparse REQUIRED)

@@ -1,5 +1,5 @@
 
-#include "myslam/myslam.h"
+#include "trslam/trslam.h"
 #include <pangolin/pangolin.h>
 #include <Eigen/Core>
 #include <opencv2/opencv.hpp>
@@ -30,8 +30,9 @@ int main()
 
     cv::Mat R, t;
 
-    std::string video_path = "/home/tamray/slam/slam-learning/data/video/demo1.mp4";
+    std::string video_path = "/home/tianru/slam/slam-learning/data/video/demo3.mp4";
     cv::VideoCapture cap;
+
 
     cap.open(video_path);
     if(!cap.isOpened())

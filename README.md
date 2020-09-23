@@ -20,7 +20,7 @@ make
 |文件夹|说明|
 |--|--|
 |src|存放自己实现的一些 .cpp 源文件(每添加一个 cpp，都要在该目录下的 CMakeList.txt 中配置)|
-|include/myslam|存放自己的一些 .h 头文件|
+|include|存放自己的一些 .h 头文件|
 |test|存放测试函数(每添加一个 cpp，都要在该目录下的 CMakeList.txt 中配置)|
 |app|存放最终生成的 .cpp 应用程序(每添加一个 cpp，都要在该目录下的 CMakeList.txt 中配置)|
 |config|存放配置文件|

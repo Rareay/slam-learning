@@ -1,19 +1,12 @@
-#include "trslam/plot.h"
+#include "trslam/common_include.h"
+#include "trslam/viewer.h"
 
-PlotPosition::~PlotPosition()
-{
-    m_thread_plot->interrupt();
-    m_thread_plot->join();
-}
+namespace trslam {
 
-void PlotPosition::Plot()
-{
-    boost::function0<void> f = boost::bind(&PlotPosition::StartPlot, this);
-    m_thread_plot = new boost::thread(f);
 
-}
 
-void PlotPosition::StartPlot()
+
+void Viewer::PlotPostion()
 {
     boost::try_mutex::scoped_try_lock  lock(m_iomutex);//锁定mutex
     if (lock.owns_lock())
@@ -90,5 +83,7 @@ void PlotPosition::StartPlot()
         std::cout << "创建绘制位姿线程失败" << std::endl;
         boost::thread::yield(); //释放控制权
     }
+}
+
 
 }

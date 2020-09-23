@@ -1,0 +1,8 @@
+
+#ifndef TRSLAM_VISUAL_ODOMETRY_H
+#define TRSLAM_VISUAL_ODOMETRY_H
+
+
+
+
+#endif
