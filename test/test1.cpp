@@ -1,17 +1,38 @@
+#include "trslam/common_include.h"
+#include "trslam/feature.h"
 
-#include "trslam/trslam.h"
 #include <pangolin/pangolin.h>
 #include <Eigen/Core>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <iostream>
 #include <unistd.h>
 
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+int main()
+{
+    cv::Mat img1 = cv::imread("/home/tianru/slam/KITTI/dataset/sequences/01/image_0/000000.png");
+    cv::Mat img2 = cv::imread("/home/tianru/slam/KITTI/dataset/sequences/01/image_0/000001.png");
 
+    std::vector<cv::Point2f> pt1, pt2, pt3;
+    std::vector<uchar> status;
+    trslam::Feature feature;
+    float f = feature.calculateLK(img1, pt1, img2, pt2, status);
+
+    std::cout << f << std::endl;
+    std::cout << pt1.size() << std::endl;
+    std::cout << pt2.size() << std::endl;
+
+    cv::imshow("1", img2);
+
+    cv::waitKey(0);
+
+    return 0;
+}
+
+#if 0
 // 光流 匹配特征点
 void LightFlow(cv::Mat & img1, cv::Mat & img2, 
                std::vector<cv::Point2f> & keypoints_1,
@@ -149,5 +170,5 @@ void PoseEstimation_2d2d(std::vector<cv::Point2f> match_keypoints_1,
                    R, t, focal_length, principal_point);
 }
 
-
+#endif
 

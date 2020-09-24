@@ -1,7 +1,5 @@
 add_library(trslam SHARED
-        camera.cpp
-        data.cpp
-        plot.cpp
+        viewer.cpp
         )
 
 target_link_libraries(trslam
