@@ -1,5 +1,6 @@
 #include "trslam/common_include.h"
 #include "trslam/feature.h"
+#include "trslam/frontend.h"
 
 #include <pangolin/pangolin.h>
 #include <Eigen/Core>
@@ -18,8 +19,8 @@ int main()
 
     std::vector<cv::Point2f> pt1, pt2, pt3;
     std::vector<uchar> status;
-    trslam::Feature feature;
-    float f = feature.calculateLK(img1, pt1, img2, pt2, status);
+    trslam::Frontend feature(4, 100);
+    float f = feature.trackFeaturePoints(img1, img2, pt1, pt2, status);
 
     std::cout << f << std::endl;
     std::cout << pt1.size() << std::endl;
