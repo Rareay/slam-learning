@@ -16,19 +16,33 @@ int main()
 {
     cv::Mat img1 = cv::imread("/home/tianru/slam/KITTI/dataset/sequences/01/image_0/000000.png");
     cv::Mat img2 = cv::imread("/home/tianru/slam/KITTI/dataset/sequences/01/image_0/000001.png");
+    cv::Mat img3 = cv::imread("/home/tianru/slam/KITTI/dataset/sequences/01/image_0/000002.png");
+    cv::Mat img4 = cv::imread("/home/tianru/slam/KITTI/dataset/sequences/01/image_0/000003.png");
+    cv::Mat img5 = cv::imread("/home/tianru/slam/KITTI/dataset/sequences/01/image_0/000004.png");
+    cv::Mat img6 = cv::imread("/home/tianru/slam/KITTI/dataset/sequences/01/image_0/000005.png");
 
-    std::vector<cv::Point2f> pt1, pt2, pt3;
-    std::vector<uchar> status;
-    trslam::Frontend feature(4, 100);
-    float f = feature.trackFeaturePoints(img1, img2, pt1, pt2, status);
+    trslam::Frontend frontend(3, 100);
+    frontend.FrontendCalculate(img1);
+    std::cout << frontend.frontFrame_.id << ":\n" 
+              << frontend.frontFrame_.pose.matrix() << "\n" << std::endl;
+    frontend.FrontendCalculate(img2);
+    std::cout << frontend.frontFrame_.id << ":\n" 
+              << frontend.frontFrame_.pose.matrix() << "\n" << std::endl;
+    frontend.FrontendCalculate(img3);
+    std::cout << frontend.frontFrame_.id << ":\n" 
+              << frontend.frontFrame_.pose.matrix() << "\n" << std::endl;
+    frontend.FrontendCalculate(img4);
+    std::cout << frontend.frontFrame_.id << ":\n" 
+              << frontend.frontFrame_.pose.matrix() << "\n" << std::endl;
+    frontend.FrontendCalculate(img5);
+    std::cout << frontend.frontFrame_.id << ":\n" 
+              << frontend.frontFrame_.pose.matrix() << "\n" << std::endl;
+    frontend.FrontendCalculate(img6);
+    std::cout << frontend.frontFrame_.id << ":\n" 
+              << frontend.frontFrame_.pose.matrix() << "\n" << std::endl;
 
-    std::cout << f << std::endl;
-    std::cout << pt1.size() << std::endl;
-    std::cout << pt2.size() << std::endl;
-
-    cv::imshow("1", img2);
-
-    cv::waitKey(0);
+    //cv::imshow("1", img2);
+    //cv::waitKey(0);
 
     return 0;
 }
