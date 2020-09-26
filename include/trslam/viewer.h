@@ -5,17 +5,24 @@
 #include "trslam/common_include.h"
 #include <pangolin/pangolin.h>
 #include <unistd.h>
+#include <Eigen/Core>
+
+#include <unistd.h>
 
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+//#include "trslam/feature.h"
+//#include "trslam/frontend.h"
+#include <sophus/se3.hpp>
 
 namespace trslam {
 
 class Viewer {
 public:
-    Viewer(std::vector<Eigen::Isometry3d> & pose) {
-        m_positions = pose;
+    //Viewer(std::vector<Eigen::Isometry3d> & pose) {
+    Viewer() {
+        //m_positions = pose;
     }
     ~Viewer() {
         if (m_thread_plot != nullptr) {
@@ -30,10 +37,11 @@ public:
         m_thread_plot = new boost::thread(f);
         return 0;
     }
+    std::vector<Sophus::SE3d> m_positions;
 
 private:
     // 位姿数据
-    std::vector<Eigen::Isometry3d> m_positions;
+    ///std::vector<Eigen::Isometry3d> m_positions;
     // 路标数据
 
     boost::thread * m_thread_plot = nullptr;

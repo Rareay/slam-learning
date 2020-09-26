@@ -32,7 +32,6 @@ void Viewer::PlotPostion()
             d_cam.Activate(s_cam);
             glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
             glLineWidth(2);
-
             if (m_positions.empty()) continue;
 
             glBegin(GL_LINES);

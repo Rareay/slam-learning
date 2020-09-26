@@ -1,6 +1,7 @@
 #include "trslam/common_include.h"
 #include "trslam/feature.h"
 #include "trslam/frontend.h"
+#include "trslam/viewer.h"
 
 #include <pangolin/pangolin.h>
 #include <Eigen/Core>
@@ -15,19 +16,38 @@
 
 int main()
 {
-    boost::format fmt("/media/tamray/新加卷/KITTI/02/%06d.png");
-    std::vector<std::string> images;
-    for (int i = 3762; i < 3762 + 700; i++) {
-        std::string p = (fmt % i).str();
-        images.push_back(p);
-    }
-
+    //std::vector<Sophus::SE3d> poses;
+    Sophus::SE3d current_pose;
+    trslam::Viewer viewer;
+    viewer.ViewPositon();
+    
     trslam::Frontend frontend(3, 500);
-    for (int i = 0; i < images.size(); i++) {
-        cv::Mat img = cv::imread(images[i]);
+    #if 0
+    ///boost::format fmt("/media/tamray/新加卷/KITTI/02/%06d.png");
+    ///std::vector<std::string> images;
+    ///for (int i = 3762; i < 3762 + 700; i++) {
+    ///    std::string p = (fmt % i).str();
+    ///    images.push_back(p);
+    ///}
+
+    ///for (int i = 0; i < images.size(); i++) {
+    ///    cv::Mat img = cv::imread(images[i]);
+    #else
+    cv::VideoCapture cap;
+	cap.open("/home/tamray/slam/slam-learning/data/video/demo1.mp4");
+	if(!cap.isOpened())
+	    return 0;
+    cv::Mat img;
+    while(1) {
+        cap >> img;
+        if (img.empty()) break;
+        cv::resize(img, img, cv::Size(900, 500));
+    #endif
         frontend.FrontendCalculate(img);
-        std::cout << frontend.frontFrame_.id << ":\n" 
-                << frontend.frontFrame_.pose.matrix() << "\n" << std::endl;
+        //std::cout << frontend.frontFrame_.id << ":\n" 
+        //        << frontend.frontFrame_.pose.matrix() << "\n" << std::endl;
+        current_pose = frontend.frontFrame_.pose * current_pose;
+        viewer.m_positions.push_back(current_pose);
         
         if (frontend.frontFrame__.id != -1) {
             cv::Mat img = frontend.frontFrame_.image.clone();
@@ -41,7 +61,7 @@ int main()
                 }
             }
             cv::imshow("1", img);
-            cv::waitKey(60);
+            if (cv::waitKey(200) >= 0) break;
         }
     }
     std::cout << "over" << std::endl;
