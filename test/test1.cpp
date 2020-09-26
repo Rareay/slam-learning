@@ -10,40 +10,43 @@
 #include <unistd.h>
 
 #include <boost/thread.hpp>
+#include <boost/format.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 int main()
 {
-    cv::Mat img1 = cv::imread("/home/tianru/slam/KITTI/dataset/sequences/01/image_0/000000.png");
-    cv::Mat img2 = cv::imread("/home/tianru/slam/KITTI/dataset/sequences/01/image_0/000001.png");
-    cv::Mat img3 = cv::imread("/home/tianru/slam/KITTI/dataset/sequences/01/image_0/000002.png");
-    cv::Mat img4 = cv::imread("/home/tianru/slam/KITTI/dataset/sequences/01/image_0/000003.png");
-    cv::Mat img5 = cv::imread("/home/tianru/slam/KITTI/dataset/sequences/01/image_0/000004.png");
-    cv::Mat img6 = cv::imread("/home/tianru/slam/KITTI/dataset/sequences/01/image_0/000005.png");
+    boost::format fmt("/media/tamray/新加卷/KITTI/02/%06d.png");
+    std::vector<std::string> images;
+    for (int i = 3762; i < 3762 + 50; i++) {
+        std::string p = (fmt % i).str();
+        images.push_back(p);
+    }
 
-    trslam::Frontend frontend(3, 100);
-    frontend.FrontendCalculate(img1);
-    std::cout << frontend.frontFrame_.id << ":\n" 
-              << frontend.frontFrame_.pose.matrix() << "\n" << std::endl;
-    frontend.FrontendCalculate(img2);
-    std::cout << frontend.frontFrame_.id << ":\n" 
-              << frontend.frontFrame_.pose.matrix() << "\n" << std::endl;
-    frontend.FrontendCalculate(img3);
-    std::cout << frontend.frontFrame_.id << ":\n" 
-              << frontend.frontFrame_.pose.matrix() << "\n" << std::endl;
-    frontend.FrontendCalculate(img4);
-    std::cout << frontend.frontFrame_.id << ":\n" 
-              << frontend.frontFrame_.pose.matrix() << "\n" << std::endl;
-    frontend.FrontendCalculate(img5);
-    std::cout << frontend.frontFrame_.id << ":\n" 
-              << frontend.frontFrame_.pose.matrix() << "\n" << std::endl;
-    frontend.FrontendCalculate(img6);
-    std::cout << frontend.frontFrame_.id << ":\n" 
-              << frontend.frontFrame_.pose.matrix() << "\n" << std::endl;
-
+    trslam::Frontend frontend(3, 300);
+    for (int i = 0; i < images.size(); i++) {
+        cv::Mat img = cv::imread(images[i]);
+        frontend.FrontendCalculate(img);
+        std::cout << frontend.frontFrame_.id << ":\n" 
+                << frontend.frontFrame_.pose.matrix() << "\n" << std::endl;
+        
+        if (frontend.frontFrame__.id != -1) {
+            cv::Mat img = frontend.frontFrame_.image.clone();
+            std::vector<cv::Point2f> pt1 = frontend.frontFrame__.feature;
+            std::vector<cv::Point2f> pt2 = frontend.frontFrame_.feature;
+            std::vector<uchar> s = frontend.frontFrame_.feature_match;
+            for (int i = 0; i < s.size(); i++) {
+                if (s[i]) {
+                    cv::circle(img,pt2[i], 2, cv::Scalar(0, 255, 0), 2);
+                    cv::line(img, pt1[i],  pt2[i], cv::Scalar(0, 255, 0));
+                }
+            }
+            cv::imshow("1", img);
+            cv::waitKey(0);
+        }
+    }
+    std::cout << "over" << std::endl;
     //cv::imshow("1", img2);
     //cv::waitKey(0);
-
     return 0;
 }
 

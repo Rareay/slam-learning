@@ -32,6 +32,26 @@ public:
         }
     };
 
+    ~Frontend() {
+        for (uint i = 0; i < FrameStatus.size(); i++) {
+            FrameStatus[i].clear();
+        }
+        FrameStatus.clear();
+        frontStatus.clear();
+        for (uint i = 0; i < CacheFrames.size(); i++) {
+            CacheFrames[i].image.release();
+            CacheFrames[i].feature.clear();
+            CacheFrames[i].feature_match.clear();
+        }
+        frontFrame_.image.release();
+        frontFrame_.feature.clear();
+        frontFrame_.feature_match.clear();
+        frontFrame__.image.release();
+        frontFrame__.feature.clear();
+        frontFrame__.feature_match.clear();
+        
+    }
+
     /** @brief 前端计算
      * @param 
      */
@@ -39,21 +59,26 @@ public:
         trslam::Frame frame;
         frame.image = img;
         frame.id = id;
+        id ++;
+        std::cout << "--1" << std::endl;
         if (CacheFrames.size() < 1) { // 如果缓存帧为空，追加当前帧后就返回
             std::vector<uchar> status(FeaturePointNum, 0);
             addFrameStatus(status);
             CacheFrames.push_back(frame);
             return ;
         }
+        std::cout << "--2" << std::endl;
         // 根据缓存的最后一帧和当前帧计算当前帧的特征点
-        trslam::Frame last_frame = CacheFrames[CacheFrames.size() - 1];
-        float f = trackFeaturePoints(last_frame.image, frame.image,
-                                     last_frame.feature, frame.feature,
+        uint l = CacheFrames.size();
+        float f = trackFeaturePoints(CacheFrames[l-1].image, frame.image,
+                                     CacheFrames[l-1].feature, frame.feature,
                                      frame.feature_match);
 
+        std::cout << "--3" << std::endl;
         std::vector<uchar> status(frame.feature_match);
         addFrameStatus(status);
 
+        std::cout << "--4" << std::endl;
         if (CacheFrames.size() < CacheFrameNum) { // 如果缓存帧未满，追加当前帧后就返回
             CacheFrames.push_back(frame);
             return ;
@@ -66,11 +91,14 @@ public:
         for (uint i = 0; i < CacheFrames.size() - 1; i++) {
             CacheFrames[i] = CacheFrames[i+1];
         }
+        std::cout << "--5" << std::endl;
         CacheFrames[CacheFrames.size() - 1] = frame;
         // 过滤出特征点
+        std::cout << "--6" << std::endl;
         flterTrackedPoints();
         std::vector<uchar> flter_status(frontStatus);
         frontFrame_.feature_match = flter_status;
+        std::cout << "--7" << std::endl;
 
         if (frontFrame__.id == -1) {
             return;
@@ -81,6 +109,7 @@ public:
                           frontFrame_.feature_match,
                           frontFrame_.pose);
 
+        std::cout << "--8" << std::endl;
     }
     
     /** @brief 位姿计算
@@ -94,7 +123,6 @@ public:
                            std::vector<uchar> & status,
                            Sophus::SE3d & pose) {
         cv::Mat K = (cv::Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
-
         std::vector<cv::Point2f> keypoints1, keypoints2;
         for (uint i = 0; i < status.size(); i++) {
             if (status[i]) {
@@ -103,7 +131,7 @@ public:
             }
         }
 
-        //-- 计算本质矩阵
+        //计算本质矩阵
         cv::Point2d principal_point(325.1, 249.7);  //相机光心, TUM dataset标定值
         double focal_length = 521;      //相机焦距, TUM dataset标定值
         cv::Mat essential_matrix;
@@ -119,32 +147,53 @@ public:
         Eigen::Vector3d t_eigen;
         cv::cv2eigen(R, R_eigen);
         cv::cv2eigen(t, t_eigen);
+        //std::cout << "R：\n" << R_eigen.matrix() << std::endl;
+        //std::cout << "t：\n" << t_eigen.matrix() << std::endl;
         Sophus::SE3d SE3_Rt(R_eigen, t_eigen);
         pose = SE3_Rt;
     }
-    // 跟踪特征点
+
+    /** 跟踪特征点
+     */
     float trackFeaturePoints(cv::Mat & img1, cv::Mat & img2, 
                              std::vector<cv::Point2f> & pt1,
                              std::vector<cv::Point2f> & pt2,
                              std::vector<uchar> & status) {
         if (img1.empty() || img2.empty()) return -1.;
-
+        std::cout << "--2--1" << std::endl;
         std::vector<cv::KeyPoint> kp1;
         if (pt1.empty()) {
-            cv::Ptr<cv::GFTTDetector> detector = cv::GFTTDetector::create(500, 0.01, 20); // maximum 500 keypoints
-            detector->detect(img1, kp1); // 从img1中提取特征点
-            for (auto &kp: kp1) pt1.push_back(kp.pt);
+            //cv::Ptr<cv::GFTTDetector> detector = cv::GFTTDetector::create(500, 0.01, 20); // maximum 500 keypoints
+            //detector->detect(img1, kp1); // 从img1中提取特征点
+            //for (auto &kp: kp1) pt1.push_back(kp.pt);
+            std::vector<cv::Point2f> pt(FeaturePointNum, cv::Point2f(0,0));
+            pt1 = pt;
+            std::vector<uchar> s(FeaturePointNum, 0);
+            addTrackedPoints(img1, pt1, s);
         }
+        std::cout << "--2--2" << std::endl;
 
         std::vector<float> error;
         cv::calcOpticalFlowPyrLK(img1, img2, pt1, pt2, status, error, 
                         cv::Size(21, 21), 3);
+        // 忽略特征点（0，0）的匹配
+        for (uint i = 0; i < FeaturePointNum; i++) {
+            if (pt1[i].x == 0 && pt1[i].y == 0) {
+                pt2[i].x = 0; pt2[i].y = 0;
+                status[i] = 0;
+            }
+        }
 
+        std::cout << "--2--3" << std::endl;
         float f = flterMatchingPoints(pt1, pt2, status);
 
+        std::cout << "--2--4" << std::endl;
         addTrackedPoints(img2, pt2, status);
+        std::cout << "--2--5" << std::endl;
 
+        // 确保status的长度为指定长度
         addFrameStatus(status);
+        std::cout << "--2--6" << std::endl;
 
         return f;
     };
@@ -154,12 +203,20 @@ public:
      */
     void addFrameStatus(std::vector<uchar> & status) {
         std::vector<uchar> s(status);
-        if (FrameStatus.size() < CacheFrameNum)
+        if (FrameStatus.size() < CacheFrameNum) {
+
+            std::cout << "--2--5--1  " << std::endl;
+            if (FrameStatus.size() > 0) 
+                std::cout << FrameStatus.size() << "  " 
+                        << FrameStatus[0].size() << "  "
+                        << s.size() << std::endl;
             FrameStatus.push_back(s);
-        else {
+        } else {
+            std::cout << "--2--5--2" << std::endl;
             for (uint i = 0; i < FrameStatus.size() - 1; i++) {
                 FrameStatus[i].swap(FrameStatus[i+1]);
             }
+            std::cout << "--2--5--3" << std::endl;
             FrameStatus[FrameStatus.size() - 1] = s;
         }
     }
