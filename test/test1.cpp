@@ -17,12 +17,12 @@ int main()
 {
     boost::format fmt("/media/tamray/新加卷/KITTI/02/%06d.png");
     std::vector<std::string> images;
-    for (int i = 3762; i < 3762 + 50; i++) {
+    for (int i = 3762; i < 3762 + 700; i++) {
         std::string p = (fmt % i).str();
         images.push_back(p);
     }
 
-    trslam::Frontend frontend(3, 300);
+    trslam::Frontend frontend(3, 500);
     for (int i = 0; i < images.size(); i++) {
         cv::Mat img = cv::imread(images[i]);
         frontend.FrontendCalculate(img);
@@ -36,12 +36,12 @@ int main()
             std::vector<uchar> s = frontend.frontFrame_.feature_match;
             for (int i = 0; i < s.size(); i++) {
                 if (s[i]) {
-                    cv::circle(img,pt2[i], 2, cv::Scalar(0, 255, 0), 2);
+                    cv::circle(img,pt2[i], 1, cv::Scalar(50, 0, 200), 2);
                     cv::line(img, pt1[i],  pt2[i], cv::Scalar(0, 255, 0));
                 }
             }
             cv::imshow("1", img);
-            cv::waitKey(0);
+            cv::waitKey(60);
         }
     }
     std::cout << "over" << std::endl;

@@ -16,9 +16,7 @@ class Frontend {
 public:
     unsigned int id = 0;
     uint CacheFrameNum; // 缓存帧数
-    std::vector<std::vector<uchar>> FrameStatus;
     uint FeaturePointNum; // 每帧特征点最大个数
-    std::vector<uchar> frontStatus;
     std::vector<trslam::Frame> CacheFrames;
     trslam::Frame frontFrame_; // 缓存的上一帧,也是输出的最新帧
     trslam::Frame frontFrame__;// 缓存的上上帧
@@ -28,28 +26,12 @@ public:
         FeaturePointNum = point_num;
         {
             std::vector<uchar> temp(point_num, 0);
-            temp.swap(frontStatus);
+            //temp.swap(frontStatus);
+            temp.swap(frontFrame_.feature_match);
         }
     };
 
     ~Frontend() {
-        for (uint i = 0; i < FrameStatus.size(); i++) {
-            FrameStatus[i].clear();
-        }
-        FrameStatus.clear();
-        frontStatus.clear();
-        for (uint i = 0; i < CacheFrames.size(); i++) {
-            CacheFrames[i].image.release();
-            CacheFrames[i].feature.clear();
-            CacheFrames[i].feature_match.clear();
-        }
-        frontFrame_.image.release();
-        frontFrame_.feature.clear();
-        frontFrame_.feature_match.clear();
-        frontFrame__.image.release();
-        frontFrame__.feature.clear();
-        frontFrame__.feature_match.clear();
-        
     }
 
     /** @brief 前端计算
@@ -60,25 +42,18 @@ public:
         frame.image = img;
         frame.id = id;
         id ++;
-        std::cout << "--1" << std::endl;
         if (CacheFrames.size() < 1) { // 如果缓存帧为空，追加当前帧后就返回
             std::vector<uchar> status(FeaturePointNum, 0);
-            addFrameStatus(status);
+            frame.feature_match = status;
             CacheFrames.push_back(frame);
             return ;
         }
-        std::cout << "--2" << std::endl;
         // 根据缓存的最后一帧和当前帧计算当前帧的特征点
         uint l = CacheFrames.size();
         float f = trackFeaturePoints(CacheFrames[l-1].image, frame.image,
                                      CacheFrames[l-1].feature, frame.feature,
                                      frame.feature_match);
 
-        std::cout << "--3" << std::endl;
-        std::vector<uchar> status(frame.feature_match);
-        addFrameStatus(status);
-
-        std::cout << "--4" << std::endl;
         if (CacheFrames.size() < CacheFrameNum) { // 如果缓存帧未满，追加当前帧后就返回
             CacheFrames.push_back(frame);
             return ;
@@ -91,14 +66,9 @@ public:
         for (uint i = 0; i < CacheFrames.size() - 1; i++) {
             CacheFrames[i] = CacheFrames[i+1];
         }
-        std::cout << "--5" << std::endl;
         CacheFrames[CacheFrames.size() - 1] = frame;
         // 过滤出特征点
-        std::cout << "--6" << std::endl;
         flterTrackedPoints();
-        std::vector<uchar> flter_status(frontStatus);
-        frontFrame_.feature_match = flter_status;
-        std::cout << "--7" << std::endl;
 
         if (frontFrame__.id == -1) {
             return;
@@ -109,7 +79,6 @@ public:
                           frontFrame_.feature_match,
                           frontFrame_.pose);
 
-        std::cout << "--8" << std::endl;
     }
     
     /** @brief 位姿计算
@@ -160,18 +129,13 @@ public:
                              std::vector<cv::Point2f> & pt2,
                              std::vector<uchar> & status) {
         if (img1.empty() || img2.empty()) return -1.;
-        std::cout << "--2--1" << std::endl;
         std::vector<cv::KeyPoint> kp1;
         if (pt1.empty()) {
-            //cv::Ptr<cv::GFTTDetector> detector = cv::GFTTDetector::create(500, 0.01, 20); // maximum 500 keypoints
-            //detector->detect(img1, kp1); // 从img1中提取特征点
-            //for (auto &kp: kp1) pt1.push_back(kp.pt);
             std::vector<cv::Point2f> pt(FeaturePointNum, cv::Point2f(0,0));
             pt1 = pt;
             std::vector<uchar> s(FeaturePointNum, 0);
-            addTrackedPoints(img1, pt1, s);
+            addTrackedPoints(img1, pt1, s, 8);
         }
-        std::cout << "--2--2" << std::endl;
 
         std::vector<float> error;
         cv::calcOpticalFlowPyrLK(img1, img2, pt1, pt2, status, error, 
@@ -184,42 +148,13 @@ public:
             }
         }
 
-        std::cout << "--2--3" << std::endl;
-        float f = flterMatchingPoints(pt1, pt2, status);
+        float f = flterMatchingPoints(pt1, pt2, status, 10000);
 
-        std::cout << "--2--4" << std::endl;
         addTrackedPoints(img2, pt2, status);
-        std::cout << "--2--5" << std::endl;
-
-        // 确保status的长度为指定长度
-        addFrameStatus(status);
-        std::cout << "--2--6" << std::endl;
 
         return f;
     };
 
-    /** @brief 更新缓存帧的匹配状态
-     * @param status 最新一帧的匹配状态
-     */
-    void addFrameStatus(std::vector<uchar> & status) {
-        std::vector<uchar> s(status);
-        if (FrameStatus.size() < CacheFrameNum) {
-
-            std::cout << "--2--5--1  " << std::endl;
-            if (FrameStatus.size() > 0) 
-                std::cout << FrameStatus.size() << "  " 
-                        << FrameStatus[0].size() << "  "
-                        << s.size() << std::endl;
-            FrameStatus.push_back(s);
-        } else {
-            std::cout << "--2--5--2" << std::endl;
-            for (uint i = 0; i < FrameStatus.size() - 1; i++) {
-                FrameStatus[i].swap(FrameStatus[i+1]);
-            }
-            std::cout << "--2--5--3" << std::endl;
-            FrameStatus[FrameStatus.size() - 1] = s;
-        }
-    }
 
     /**
      * @brief 过滤距离远的匹配点
@@ -232,7 +167,7 @@ public:
     float flterMatchingPoints(std::vector<cv::Point2f> & pt1,
                            std::vector<cv::Point2f> & pt2,
                            std::vector<uchar> & status,
-                           int threshold = 400) {
+                           int threshold = 4000) {
         int n = 0;
         for (uint i = 0; i < pt1.size(); i++) {
             if (status[i]) {
@@ -267,15 +202,21 @@ public:
         // 把有效点打点在蒙板上
         cv::Mat mask = cv::Mat::zeros(img.rows, img.cols, CV_8UC1);
         for (uint i = 0; i < pt.size(); i++) {
-            uchar * ptr = mask.ptr<uchar>((int)pt[i].y);
-            ptr[(int)pt[i].x] = 1;
+            int x = pt[i].x;
+            int y = pt[i].y;
+            if (x <= 0 || x >= mask.cols || 
+                y <= 0 || y >= mask.rows) continue;
+            uchar * ptr = mask.ptr<uchar>(y);
+            ptr[x] = 1;
         }
 
         // 查找出和有效点距离远的点
         std::vector<cv::Point2f> new_pt;
+        int new_pt_id = 0;
         for (uint i = 0; i < alternative_pt.size(); i++) {
             int x_min, x_max;
             int y_min, y_max;
+
 
             x_min = alternative_pt[i].x - min_distance;
             if (x_min < 0)
@@ -306,9 +247,11 @@ public:
             }
 
             if (suit_point) {
-                new_pt.push_back(alternative_pt[i]);
+                cv::Point2f p(alternative_pt[i]);
+                new_pt.push_back(p);
             }
         }
+
 
         // 用新点覆盖无效点
         uint new_point_id = 0;
@@ -325,21 +268,15 @@ public:
     /** @brief 根据缓存帧过滤出有效跟踪点
      */
     void flterTrackedPoints() {
-        if (FrameStatus.size() != CacheFrameNum) return;
+        if (CacheFrames.size() != CacheFrameNum) return;
         std::vector<uchar> status(FeaturePointNum);
         for (uint i = 0; i < FeaturePointNum; i++) {
-            if (frontStatus[i] == 1) {
-                if (FrameStatus[0][i] == 0)
-                    frontStatus[i] = 0;
-            } else {
-                bool track_it = true;
-                for (uint j = 0; j < CacheFrameNum; j++) {
-                    if (FrameStatus[j][i] == 0) {
-                        track_it = false;
-                        break;
-                    }
+            for (uint j = 0; j < CacheFrameNum; j++) {
+                if (CacheFrames[j].feature_match[i] != 0) continue;
+                if (frontFrame__.feature_match[i] == 0) {
+                    frontFrame_.feature_match[i] = 0;
                 }
-                if (track_it) frontStatus[i] = 1;
+                break;
             }
         }
     }
