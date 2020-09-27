@@ -1,3 +1,10 @@
+/** @file config.h
+ * @brief 读取 yaml 配置文件
+ * 
+ * @author Tamray
+ * @date 2020.09.27
+ */
+
 
 #ifndef TRSLAM_CONFIG_H
 #define TRSLAM_CONFIG_H
@@ -38,6 +45,6 @@ class Config {
     }
 };
 
-}  // namespace myslam
+}  // namespace trslam
 
 #endif

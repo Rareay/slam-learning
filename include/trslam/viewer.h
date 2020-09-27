@@ -1,3 +1,9 @@
+/** @file viewer.h
+ * @brief openGL 三维视图，显示位姿、路标等
+ * 
+ * @author Tamray
+ * @date 2020.09.25
+ */
 
 #ifndef TRSLAM_VIEWER_H
 #define TRSLAM_VIEWER_H
@@ -12,8 +18,6 @@
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-//#include "trslam/feature.h"
-//#include "trslam/frontend.h"
 #include <sophus/se3.hpp>
 
 namespace trslam {

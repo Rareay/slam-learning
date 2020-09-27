@@ -1,3 +1,10 @@
+/** @file viewer.cpp
+ * @brief openGL 三维视图，显示位姿、路标等
+ * 
+ * @author Tamray
+ * @date 2020.09.25
+ */
+
 #include "trslam/common_include.h"
 #include "trslam/viewer.h"
 
@@ -48,20 +55,38 @@ void Viewer::PlotPostion()
 
             for (size_t i = 0; i < m_positions.size(); i++) {
                 // 画每个位姿的三个坐标轴
-                Eigen::Vector3d Ow = m_positions[i].translation();
-                Eigen::Vector3d Xw = m_positions[i] * (0.1 * Eigen::Vector3d(1, 0, 0));
-                Eigen::Vector3d Yw = m_positions[i] * (0.1 * Eigen::Vector3d(0, 1, 0));
-                Eigen::Vector3d Zw = m_positions[i] * (0.1 * Eigen::Vector3d(0, 0, 1));
+                Eigen::Vector3d Ow  = m_positions[i].translation();
+                Eigen::Vector3d Xw  = m_positions[i] * (0.1 * Eigen::Vector3d(-1, 0, 0));
+                Eigen::Vector3d Yw_ = m_positions[i] * (0.1 * Eigen::Vector3d(0, 2, 0));
+                Eigen::Vector3d Yw  = m_positions[i] * (0.1 * Eigen::Vector3d(0, -2, 0));
+                Eigen::Vector3d Zw  = m_positions[i] * (0.1 * Eigen::Vector3d(0, 0, 2));
+                Eigen::Vector3d Zw_ = m_positions[i] * (0.1 * Eigen::Vector3d(0, 0, -2));
                 glBegin(GL_LINES);
                 glColor3f(1.0, 0.0, 0.0);
-                glVertex3d(Ow[0], Ow[1], Ow[2]);
                 glVertex3d(Xw[0], Xw[1], Xw[2]);
-                glColor3f(0.0, 1.0, 0.0);
-                glVertex3d(Ow[0], Ow[1], Ow[2]);
                 glVertex3d(Yw[0], Yw[1], Yw[2]);
-                glColor3f(0.0, 0.0, 1.0);
-                glVertex3d(Ow[0], Ow[1], Ow[2]);
+
+                glVertex3d(Xw[0], Xw[1], Xw[2]);
+                glVertex3d(Yw_[0], Yw_[1], Yw_[2]);
+
+                glVertex3d(Xw[0], Xw[1], Xw[2]);
                 glVertex3d(Zw[0], Zw[1], Zw[2]);
+
+                glVertex3d(Xw[0], Xw[1], Xw[2]);
+                glVertex3d(Zw_[0], Zw_[1], Zw_[2]);
+
+                glColor3f(0.0, 1.0, 0.0);
+                glVertex3d(Yw[0], Yw[1], Yw[2]);
+                glVertex3d(Zw[0], Zw[1], Zw[2]);
+
+                glVertex3d(Zw[0], Zw[1], Zw[2]);
+                glVertex3d(Yw_[0], Yw_[1], Yw_[2]);
+
+                glVertex3d(Yw_[0], Yw_[1], Yw_[2]);
+                glVertex3d(Zw_[0], Zw_[1], Zw_[2]);
+
+                glVertex3d(Zw_[0], Zw_[1], Zw_[2]);
+                glVertex3d(Yw[0], Yw[1], Yw[2]);
                 glEnd();
             }
             // 画出连线

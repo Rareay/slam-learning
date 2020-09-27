@@ -1,3 +1,9 @@
+/** @file frame.h
+ * @brief 帧信息
+ * 
+ * @author Tamray
+ * @date 2020.09.26
+ */
 
 #ifndef TRSLAM_FRAME_H
 #define TRSLAM_FRAME_H

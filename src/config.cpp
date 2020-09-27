@@ -1,3 +1,10 @@
+/** @file config.cpp
+ * @brief 读取 yaml 配置文件
+ * 
+ * @author Tamray
+ * @date 2020.09.27
+ */
+
 #include "trslam/config.h"
 
 

@@ -1,3 +1,9 @@
+/** @file dataset.h
+ * @brief 读取数据集
+ * 
+ * @author Tamray
+ * @date 2020.09.27
+ */
 
 #ifndef TRSLAM_DATESET_H
 #define TRSLAM_DATESET_H
@@ -15,6 +21,8 @@ namespace trslam {
 
 
 /** @brief 数据集的读取类
+ * 
+ * 根据 yaml 文件的配置，读取视频数据或图片数据
  * 
  * @note 使用该类前，一定要先初始化 trslam::Config，见 ./include/trslam/config.h
  */

@@ -1,3 +1,10 @@
+/** @file dataset.cpp
+ * @brief 读取数据集
+ * 
+ * @author Tamray
+ * @date 2020.09.27
+ */
+
 #include "trslam/common_include.h"
 #include "trslam/dataset.h"
 
