@@ -23,8 +23,6 @@ public:
     std::vector<uchar> feature_match;   // 和上一帧的匹配状态
     Sophus::SE3d pose;           // 位姿
 
-
-
 private:
 };
 

@@ -9,6 +9,8 @@
 #define TRSLAM_FRONTEND_H
 
 #include "trslam/frame.h"
+#include "trslam/map.h"
+
 #include <Eigen/Core>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -20,6 +22,7 @@ namespace trslam {
 
 class Frontend {
 public:
+    Map mMap;   
     unsigned int id = 0;
     uint CacheFrameNum; // 缓存帧数
     uint FeaturePointNum; // 每帧特征点最大个数

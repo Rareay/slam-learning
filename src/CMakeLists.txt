@@ -3,6 +3,7 @@ add_library(trslam SHARED
         config.cpp
         dataset.cpp
         frontend.cpp
+        map.cpp
         )
 
 target_link_libraries(trslam
