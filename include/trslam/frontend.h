@@ -23,7 +23,9 @@ namespace trslam {
 class Frontend {
 public:
     Map mMap;   
-    unsigned int id = 0;
+    std::vector<uint> mRoasid;
+    uint mRoasidMax = 0;
+    uint id = 0;
     uint CacheFrameNum; // 缓存帧数
     uint FeaturePointNum; // 每帧特征点最大个数
     std::vector<trslam::Frame> CacheFrames;
@@ -38,6 +40,35 @@ public:
      * @param 
      */
     void FrontendCalculate(cv::Mat img);
+
+
+
+    /** @brief 更新地图路标
+     */
+    void refreshRoasid(cv::Mat & img,
+                       std::vector<cv::Point2f> & ptr1,
+                       std::vector<cv::Point2f> & ptr2,
+                       std::vector<uchar> & statue1,
+                       std::vector<uchar> & statue2,
+                       Sophus::SE3d pose);
+
+    /** @brief 三角测量
+     */
+    Eigen::Vector3d calculateRoadsign(cv::Mat & img,
+                                      cv::Point2f pt1,
+                                      cv::Point2f pt2,
+                                      Sophus::SE3d pose);
+
+    /** @brief 更新地图帧特征
+     */
+    void refreshPosture(uint id, Sophus::SE3d pose);
+
+    /** @brief 更新地图帧特征
+     */
+    void refreshFramefeature(uint id,
+                             std::vector<cv::Point2f> & ptr1,
+                             std::vector<uchar> & statue1);
+
     
     /** @brief 位姿计算
      * @param pt1 图像1的特征点
@@ -48,7 +79,8 @@ public:
     void estimatePose_2d2d(std::vector<cv::Point2f> & pt1,
                            std::vector<cv::Point2f> & pt2,
                            std::vector<uchar> & status,
-                           Sophus::SE3d & pose); 
+                           Sophus::SE3d & pose1,
+                           Sophus::SE3d & pose2); 
 
     /** 跟踪特征点
      */

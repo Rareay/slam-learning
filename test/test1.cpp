@@ -36,8 +36,7 @@ int main()
         frontend.FrontendCalculate(img);
         //std::cout << frontend.frontFrame_.id << ":\n" 
         //        << frontend.frontFrame_.pose.matrix() << "\n" << std::endl;
-        current_pose = frontend.frontFrame_.pose * current_pose;
-        viewer.m_positions.push_back(current_pose);
+        viewer.m_positions.push_back(frontend.frontFrame_.pose);
         
         if (frontend.frontFrame__.id != -1) {
             cv::Mat img = frontend.frontFrame_.image.clone();

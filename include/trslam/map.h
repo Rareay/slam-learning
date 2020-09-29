@@ -38,7 +38,7 @@ struct Roadsign
 
 /** @brief 帧
  */
-struct Frameinfo
+struct Framefeature
 {
     unsigned int id;
     std::vector<cv::Point2f> ptr; // 特征点
@@ -60,10 +60,10 @@ public:
     void readRoadsign(std::vector<Roadsign> & roadsigns);
     void refreshRoadsign(std::vector<Roadsign> & roadsigns);
 
-    void pushFrame(Frameinfo frame);
-    void eraseFrame(int remain_num);
-    void readFrame(std::vector<Frameinfo> & frames);
-    void refreshFrame(std::vector<Frameinfo> & frames);
+    void pushFramefeature(Framefeature feature);
+    void eraseFramefeature(int remain_num);
+    void readFramefeature(std::vector<Framefeature> & features);
+    void refreshFramefeature(std::vector<Framefeature> & features);
 
     void pushKeyframe(unsigned int id);
     void eraseKeyframe(int remain_num);
@@ -78,7 +78,7 @@ private:
     
     std::vector<Postrue> mPostures;
     std::vector<Roadsign> mRoadsigns;
-    std::vector<Frameinfo> mFrame;
+    std::vector<Framefeature> mFramefeatures;
     std::vector<unsigned> mKeyframe;
 
     Eigen::Vector4d mParam; // 相机内参
