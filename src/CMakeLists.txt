@@ -4,6 +4,8 @@ add_library(trslam SHARED
         dataset.cpp
         frontend.cpp
         map.cpp
+        mappoint.cpp
+        camera.cpp
         )
 
 target_link_libraries(trslam

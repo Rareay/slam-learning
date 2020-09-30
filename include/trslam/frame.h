@@ -8,10 +8,7 @@
 #ifndef TRSLAM_FRAME_H
 #define TRSLAM_FRAME_H
 
-#include <opencv2/opencv.hpp>
-#include <Eigen/Core>
-#include <Eigen/Geometry>
-#include <sophus/se3.hpp>
+#include "trslam/common_include.h"
 
 namespace trslam {
 
@@ -21,7 +18,7 @@ public:
     cv::Mat image;               // 图像
     std::vector<cv::Point2f> feature; // 特征点
     std::vector<uchar> feature_match;   // 和上一帧的匹配状态
-    Sophus::SE3d pose;           // 位姿
+    SE3 pose;           // 位姿
 
 private:
 };

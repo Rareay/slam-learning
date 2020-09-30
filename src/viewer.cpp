@@ -39,8 +39,15 @@ void Viewer::PlotPostion()
             d_cam.Activate(s_cam);
             glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
             glLineWidth(2);
-            if (m_positions.empty()) continue;
 
+            std::vector<Postrue> postures;
+            mappoint.readPostrue(postures);
+            std::vector<Roadsign> roadsigns;
+            mappoint.readRoadsign(roadsigns);
+            if (roadsigns.empty() || postures.empty()) continue;
+            if (postures.empty()) continue;
+
+            // 绘制世界坐标系
             glBegin(GL_LINES);
             glColor3f(1.0, 1.0, 0.0);
             glVertex3d(0, 0, 0);
@@ -53,14 +60,30 @@ void Viewer::PlotPostion()
             glVertex3d(10, 0, 0);
             glEnd();
 
-            for (size_t i = 0; i < m_positions.size(); i++) {
+            // 绘制点
+            #if 0
+            glPointSize(3);
+            glColor3f(0.0, 0.0, 1.0);
+            for (uint i = 0; i < roadsigns.size(); i++) {
+                Vec3 r = roadsigns[i].rods;
+                glBegin(GL_POINTS);
+                glVertex3d(r.matrix()[0], r.matrix()[1], r.matrix()[2]);
+                glEnd();
+                //std::cout << roadsigns.size() << " " << r.matrix() << std::endl;
+            }
+            #endif
+
+
+            // 绘制位姿
+            for (size_t i = 0; i < postures.size(); i++) {
+                SE3 se3 = postures[i].pose;
                 // 画每个位姿的三个坐标轴
-                Eigen::Vector3d Ow  = m_positions[i].translation();
-                Eigen::Vector3d Xw  = m_positions[i] * (0.1 * Eigen::Vector3d(-1, 0, 0));
-                Eigen::Vector3d Yw_ = m_positions[i] * (0.1 * Eigen::Vector3d(0, 2, 0));
-                Eigen::Vector3d Yw  = m_positions[i] * (0.1 * Eigen::Vector3d(0, -2, 0));
-                Eigen::Vector3d Zw  = m_positions[i] * (0.1 * Eigen::Vector3d(0, 0, 2));
-                Eigen::Vector3d Zw_ = m_positions[i] * (0.1 * Eigen::Vector3d(0, 0, -2));
+                //Eigen::Vector3d Ow  = m_positions[i].translation();
+                Eigen::Vector3d Xw  = se3 * (0.1 * Eigen::Vector3d(-1, 0, 0));
+                Eigen::Vector3d Yw_ = se3 * (0.1 * Eigen::Vector3d(0, 2, 0));
+                Eigen::Vector3d Yw  = se3 * (0.1 * Eigen::Vector3d(0, -2, 0));
+                Eigen::Vector3d Zw  = se3 * (0.1 * Eigen::Vector3d(0, 0, 2));
+                Eigen::Vector3d Zw_ = se3 * (0.1 * Eigen::Vector3d(0, 0, -2));
                 glBegin(GL_LINES);
                 glColor3f(1.0, 0.0, 0.0);
                 glVertex3d(Xw[0], Xw[1], Xw[2]);
@@ -90,10 +113,10 @@ void Viewer::PlotPostion()
                 glEnd();
             }
             // 画出连线
-            for (size_t i = 0; i < m_positions.size()-1; i++) {
+            for (size_t i = 0; i < postures.size()-1; i++) {
                 glColor3f(0.0, 0.0, 0.0);
                 glBegin(GL_LINES);
-                auto p1 = m_positions[i], p2 = m_positions[i + 1];
+                auto p1 = postures[i].pose, p2 = postures[i + 1].pose;
                 glVertex3d(p1.translation()[0], p1.translation()[1], p1.translation()[2]);
                 glVertex3d(p2.translation()[0], p2.translation()[1], p2.translation()[2]);
                 glEnd();

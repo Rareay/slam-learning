@@ -10,7 +10,6 @@
 #define TRSLAM_CONFIG_H
 
 #include "trslam/common_include.h"
-#include<opencv2/opencv.hpp>
 #include <memory>
 
 namespace trslam {

@@ -9,10 +9,9 @@
 #define TRSLAM_FRONTEND_H
 
 #include "trslam/frame.h"
-#include "trslam/map.h"
+#include "trslam/mappoint.h"
+#include "trslam/camera.h"
 
-#include <Eigen/Core>
-#include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/eigen.hpp>
@@ -22,7 +21,8 @@ namespace trslam {
 
 class Frontend {
 public:
-    Map mMap;   
+    Mappoint mMappoint;   
+    Camera mCamera;
     std::vector<uint> mRoasid;
     uint mRoasidMax = 0;
     uint id = 0;
@@ -31,8 +31,9 @@ public:
     std::vector<trslam::Frame> CacheFrames;
     trslam::Frame frontFrame_; // 缓存的上一帧,也是输出的最新帧
     trslam::Frame frontFrame__;// 缓存的上上帧
+    bool mShow = true;
 
-    Frontend(int frame_num, int point_num);
+    Frontend(int frame_num, int point_num, bool show = true);
 
     ~Frontend() {}
 
@@ -45,23 +46,16 @@ public:
 
     /** @brief 更新地图路标
      */
-    void refreshRoasid(cv::Mat & img,
-                       std::vector<cv::Point2f> & ptr1,
+    void refreshRoasid(std::vector<cv::Point2f> & ptr1,
                        std::vector<cv::Point2f> & ptr2,
                        std::vector<uchar> & statue1,
                        std::vector<uchar> & statue2,
-                       Sophus::SE3d pose);
+                       SE3 pose1, SE3 pose2);
 
-    /** @brief 三角测量
-     */
-    Eigen::Vector3d calculateRoadsign(cv::Mat & img,
-                                      cv::Point2f pt1,
-                                      cv::Point2f pt2,
-                                      Sophus::SE3d pose);
 
     /** @brief 更新地图帧特征
      */
-    void refreshPosture(uint id, Sophus::SE3d pose);
+    void refreshPosture(uint id, SE3 pose);
 
     /** @brief 更新地图帧特征
      */
@@ -79,8 +73,8 @@ public:
     void estimatePose_2d2d(std::vector<cv::Point2f> & pt1,
                            std::vector<cv::Point2f> & pt2,
                            std::vector<uchar> & status,
-                           Sophus::SE3d & pose1,
-                           Sophus::SE3d & pose2); 
+                           SE3 & pose1,
+                           SE3 & pose2); 
 
     /** 跟踪特征点
      */
@@ -115,6 +109,8 @@ public:
     /** @brief 根据缓存帧过滤出有效跟踪点
      */
     void flterTrackedPoints();
+
+    void showPicture();
 
 private:
 

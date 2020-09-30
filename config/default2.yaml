@@ -1,6 +1,6 @@
 %YAML:1.0
 ---
-data_type: video
+data_type: picture
 video_path: /home/tanrui/slam/slam-learning/data/video/demo1.mp4
 video_w: 900
 video_h: 500

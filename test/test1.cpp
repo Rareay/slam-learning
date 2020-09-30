@@ -19,14 +19,15 @@
 int main()
 {
     trslam::Config::SetParameterFile("./config/default2.yaml");
+    SE3 p;
+    trslam::Camera::setCameraParam(520.9, 512.0, 325.1, 249.7, 0., p);
+    trslam::Mappoint::createMappoint();
     trslam::Dataset data;
 
-    //std::vector<Sophus::SE3d> poses;
-    Sophus::SE3d current_pose;
     trslam::Viewer viewer;
     viewer.ViewPositon();
     
-    trslam::Frontend frontend(3, 500);
+    trslam::Frontend frontend(3, 100);
 
     cv::Mat img;
     while (1) {
@@ -34,28 +35,8 @@ int main()
         if (img.empty()) break;
 
         frontend.FrontendCalculate(img);
-        //std::cout << frontend.frontFrame_.id << ":\n" 
-        //        << frontend.frontFrame_.pose.matrix() << "\n" << std::endl;
-        viewer.m_positions.push_back(frontend.frontFrame_.pose);
-        
-        if (frontend.frontFrame__.id != -1) {
-            cv::Mat img = frontend.frontFrame_.image.clone();
-            std::vector<cv::Point2f> pt1 = frontend.frontFrame__.feature;
-            std::vector<cv::Point2f> pt2 = frontend.frontFrame_.feature;
-            std::vector<uchar> s = frontend.frontFrame_.feature_match;
-            for (int i = 0; i < s.size(); i++) {
-                if (s[i]) {
-                    cv::circle(img,pt2[i], 1, cv::Scalar(50, 0, 200), 2);
-                    cv::line(img, pt1[i],  pt2[i], cv::Scalar(0, 255, 0));
-                }
-            }
-            cv::imshow("1", img);
-            if (cv::waitKey(100) >= 0) break;
-        }
     }
     std::cout << "over" << std::endl;
-    //cv::imshow("1", img2);
-    //cv::waitKey(0);
     return 0;
 }
 

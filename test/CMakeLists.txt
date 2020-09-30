@@ -1,4 +1,4 @@
-SET(TEST_SOURCES test2)
+SET(TEST_SOURCES test1)
 
 FOREACH (test_src ${TEST_SOURCES})
     ADD_EXECUTABLE(${test_src} ${test_src}.cpp)

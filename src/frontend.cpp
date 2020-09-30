@@ -10,7 +10,7 @@
 
 namespace trslam {
 
-Frontend::Frontend(int frame_num, int point_num) {
+Frontend::Frontend(int frame_num, int point_num, bool show) {
     CacheFrameNum = frame_num;
     FeaturePointNum = point_num;
     {
@@ -22,12 +22,14 @@ Frontend::Frontend(int frame_num, int point_num) {
         std::vector<uint> temp(point_num, 0);
         temp.swap(mRoasid);
     }
+    mShow = show;
 }
 
 void Frontend::FrontendCalculate(cv::Mat img) {
     trslam::Frame frame;
     frame.image = img;
     frame.id = id;
+    std::cout << "id: " << id << std::endl;
     id ++;
     if (CacheFrames.size() < 1) { // 如果缓存帧为空，追加当前帧后就返回
         std::vector<uchar> status(FeaturePointNum, 0);
@@ -37,7 +39,7 @@ void Frontend::FrontendCalculate(cv::Mat img) {
     }
     // 根据缓存的最后一帧和当前帧计算当前帧的特征点
     uint l = CacheFrames.size();
-    float f = trackFeaturePoints(CacheFrames[l-1].image, frame.image,
+    trackFeaturePoints(CacheFrames[l-1].image, frame.image,
                                     CacheFrames[l-1].feature, frame.feature,
                                     frame.feature_match);
 
@@ -64,14 +66,15 @@ void Frontend::FrontendCalculate(cv::Mat img) {
     estimatePose_2d2d(frontFrame__.feature,
                         frontFrame_.feature,
                         frontFrame_.feature_match,
+                        frontFrame__.pose,
                         frontFrame_.pose);
 
     // 刷新地图路标
-    refreshRoasid(frontFrame_.image,
-                  frontFrame__.feature,
+    refreshRoasid(frontFrame__.feature,
                   frontFrame_.feature,
                   frontFrame__.feature_match,
                   frontFrame_.feature_match,
+                  frontFrame__.pose,
                   frontFrame_.pose);
                   
     // 刷新地图位姿
@@ -79,27 +82,54 @@ void Frontend::FrontendCalculate(cv::Mat img) {
 
     // 刷新地图帧特征
     refreshFramefeature(id, frontFrame_.feature, frontFrame_.feature_match);
+
+    showPicture();
 }
  
 
-void Frontend::refreshRoasid(cv::Mat & img,
-                       std::vector<cv::Point2f> & ptr1,
+void Frontend::refreshRoasid(std::vector<cv::Point2f> & ptr1,
                        std::vector<cv::Point2f> & ptr2,
                        std::vector<uchar> & statue1,
                        std::vector<uchar> & statue2,
-                       Sophus::SE3d pose)
+                       SE3 pose1, SE3 pose2)
 {
-    for (int i = 0; i < statue1.size(); i++) {
-        if (statue2[i] == 1) {
-            if (statue1[i] == 0) {
-                // 更新路标id
-                mRoasidMax++;
-                mRoasid[i] = mRoasidMax;
-                // 计算路标
-                Roadsign roas;
-                roas.id = mRoasidMax;
-                roas.rods = calculateRoadsign(img, ptr1[i], ptr2[i], pose);
-                mMap.pushRoadsign(roas);
+    std::vector<cv::Point2f> pts_1, pts_2;
+    std::vector<uint> match_ptr_index;
+    for (uint i = 0; i < statue2.size(); i++) { // 找出有效特征点
+        if (statue2[i]) {
+            match_ptr_index.push_back(i);
+            pts_1.push_back(mCamera.pixel2camera(ptr1[i]));
+            pts_2.push_back(mCamera.pixel2camera(ptr2[i]));
+        }
+    }
+    cv::Mat T1, T2;
+    cv::Mat pts_4d;
+    cv::eigen2cv(pose1.matrix3x4(), T1);
+    cv::eigen2cv(pose2.matrix3x4(), T2);
+    cv::triangulatePoints(T1, T2, pts_1, pts_2, pts_4d); // 对有效特征点三角测量
+    std::vector<Vec3> rods_temp; // 路标点
+    for (int i=0; i<pts_4d.cols; i++)
+    {
+        cv::Mat x = pts_4d.col(i);
+        x /= x.at<float>(3,0); // 归一化 
+        Vec3 rod;
+        cv::cv2eigen(x, rod);
+        rods_temp.push_back(rod);
+    }
+
+    for (uint i = 0; i < statue1.size(); i++) {
+        if (statue2[i] && (statue1[i] == 0)) { // 选出新的路标点，并存储
+            // 更新路标id
+            mRoasidMax++;
+            mRoasid[i] = mRoasidMax;
+
+            for (uint j = 0; j < match_ptr_index.size(); j++) {
+                if (match_ptr_index[j] == i){ 
+                    Roadsign roadsign;
+                    roadsign.id = mRoasidMax;
+                    roadsign.rods = rods_temp[j];
+                    mMappoint.pushRoadsign(roadsign);
+                }
             }
         }
     }
@@ -107,20 +137,12 @@ void Frontend::refreshRoasid(cv::Mat & img,
 }
 
 
-Eigen::Vector3d Frontend::calculateRoadsign(cv::Mat & img,
-                                            cv::Point2f pt1,
-                                            cv::Point2f pt2,
-                                            Sophus::SE3d pose)
-{
-
-}                                    
-
-void Frontend::refreshPosture(uint id, Sophus::SE3d pose)
+void Frontend::refreshPosture(uint id, SE3 pose)
 {
     Postrue p;
     p.id = id;
     p.pose = pose;
-    mMap.pushPosture(p);
+    mMappoint.pushPosture(p);
 }
 
 void Frontend::refreshFramefeature(uint id,
@@ -129,7 +151,7 @@ void Frontend::refreshFramefeature(uint id,
 {
     std::vector<cv::Point2f> p;
     std::vector<uint> p_rods;
-    for (int i = 0; i < statue.size(); i++) {
+    for (uint i = 0; i < statue.size(); i++) {
         if (statue[i] == 1) {
             p.push_back(ptr[i]);
             p_rods.push_back(mRoasid[i]);
@@ -139,7 +161,7 @@ void Frontend::refreshFramefeature(uint id,
     framefeature.id = id;
     framefeature.ptr = p;
     framefeature.ptr_rods = p_rods;
-    mMap.pushFramefeature(framefeature);
+    mMappoint.pushFramefeature(framefeature);
 }
 
 
@@ -149,9 +171,10 @@ void Frontend::refreshFramefeature(uint id,
 void Frontend::estimatePose_2d2d(std::vector<cv::Point2f> & pt1,
                         std::vector<cv::Point2f> & pt2,
                         std::vector<uchar> & status,
-                        Sophus::SE3d & pose1,
-                        Sophus::SE3d & pose2) {
-    cv::Mat K = (cv::Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
+                        SE3 & pose1,
+                        SE3 & pose2) {
+    cv::Mat K = cv::Mat::ones(3, 3, CV_64FC1);
+    cv::eigen2cv(mCamera.getK(), K);
     std::vector<cv::Point2f> keypoints1, keypoints2;
     for (uint i = 0; i < status.size(); i++) {
         if (status[i]) {
@@ -172,13 +195,11 @@ void Frontend::estimatePose_2d2d(std::vector<cv::Point2f> & pt1,
     cv::Mat R, t;
     cv::recoverPose(essential_matrix, keypoints1, keypoints2, 
                     R, t, focal_length, principal_point);
-    Eigen::Matrix3d R_eigen;
-    Eigen::Vector3d t_eigen;
+    Mat33 R_eigen;
+    Vec3 t_eigen;
     cv::cv2eigen(R, R_eigen);
     cv::cv2eigen(t, t_eigen);
-    //std::cout << "R：\n" << R_eigen.matrix() << std::endl;
-    //std::cout << "t：\n" << t_eigen.matrix() << std::endl;
-    Sophus::SE3d SE3_Rt(R_eigen, t_eigen);
+    SE3 SE3_Rt(R_eigen, t_eigen);
     pose2 = pose1 * SE3_Rt;
 }
 
@@ -255,7 +276,7 @@ void Frontend::addTrackedPoints(cv::Mat & img, std::vector<cv::Point2f> & pt,
 
     // 查找出和有效点距离远的点
     std::vector<cv::Point2f> new_pt;
-    int new_pt_id = 0;
+    //uint new_pt_id = 0;
     for (uint i = 0; i < alternative_pt.size(); i++) {
         int x_min, x_max;
         int y_min, y_max;
@@ -321,5 +342,27 @@ void Frontend::flterTrackedPoints() {
         }
     }
 }
+
+
+
+
+void Frontend::showPicture()
+{
+    cv::Mat img = frontFrame_.image.clone();
+    std::vector<cv::Point2f> pt1 = frontFrame__.feature;
+    std::vector<cv::Point2f> pt2 = frontFrame_.feature;
+    std::vector<uchar> s = frontFrame_.feature_match;
+    for (uint i = 0; i < s.size(); i++) {
+        if (s[i]) {
+            cv::circle(img, pt2[i], 1, cv::Scalar(50, 0, 200), 2);
+            cv::line(img, pt1[i],  pt2[i], cv::Scalar(0, 255, 0));
+        }
+    }
+    cv::imshow("dataset", img);
+    if (cv::waitKey(1) >= 0) exit(0);
+}
+
+
+
 
 }

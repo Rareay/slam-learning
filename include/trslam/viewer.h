@@ -9,16 +9,13 @@
 #define TRSLAM_VIEWER_H
 
 #include "trslam/common_include.h"
-#include <pangolin/pangolin.h>
-#include <unistd.h>
-#include <Eigen/Core>
+#include "trslam/mappoint.h"
 
+#include <pangolin/pangolin.h>
 #include <unistd.h>
 
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-
-#include <sophus/se3.hpp>
 
 namespace trslam {
 
@@ -41,9 +38,10 @@ public:
         m_thread_plot = new boost::thread(f);
         return 0;
     }
-    std::vector<Sophus::SE3d> m_positions;
+    std::vector<SE3> m_positions;
 
 private:
+    Mappoint mappoint;
     // 位姿数据
     ///std::vector<Eigen::Isometry3d> m_positions;
     // 路标数据
