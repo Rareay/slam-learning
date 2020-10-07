@@ -7,6 +7,7 @@
 
 #include "trslam/common_include.h"
 #include "trslam/viewer.h"
+#include "trslam/config.h"
 
 namespace trslam {
 
@@ -61,17 +62,18 @@ void Viewer::PlotPostion()
             glEnd();
 
             // 绘制点
-            #if 0
-            glPointSize(3);
-            glColor3f(0.0, 0.0, 1.0);
-            for (uint i = 0; i < roadsigns.size(); i++) {
-                Vec3 r = roadsigns[i].rods;
-                glBegin(GL_POINTS);
-                glVertex3d(r.matrix()[0], r.matrix()[1], r.matrix()[2]);
-                glEnd();
-                //std::cout << roadsigns.size() << " " << r.matrix() << std::endl;
+            int showrods = Config::Get<int>("showrods");
+            if (showrods != 0) {
+                glPointSize(5);
+                glColor3f(1.0, 0.0, 0.0);
+                for (uint i = 0; i < roadsigns.size(); i++) {
+                    Vec3 r = roadsigns[i].rods;
+                    glBegin(GL_POINTS);
+                    glVertex3d(r.matrix()[0], r.matrix()[1], r.matrix()[2]);
+                    glEnd();
+                    //std::cout << roadsigns.size() << " " << r.matrix() << std::endl;
+                }
             }
-            #endif
 
 
             // 绘制位姿

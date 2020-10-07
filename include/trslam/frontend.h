@@ -110,6 +110,13 @@ public:
      */
     void flterTrackedPoints();
 
+    /** @brief 过滤距离太近的特征点
+     */
+    void filterFeaturePoints(cv::Mat & img, 
+                             std::vector<cv::Point2f> & pt,
+                             std::vector<uchar> & status,
+                             int min_distance = 5);
+
     void showPicture();
 
 private:

@@ -12,10 +12,13 @@
 #include <opencv2/core/eigen.hpp>
 int main()
 {
-    cv::Mat img = (cv::Mat_<float>(4,1) << 1.,2.,3.,4.);
-    Vec3 v;
-    cv::cv2eigen(img, v);
-    std::cout << img << std::endl;
-    std::cout << v.matrix() << std::endl;
+    Eigen::Matrix3d R = Eigen::AngleAxisd(M_PI / 4, Eigen::Vector3d(0, 0, 1)).toRotationMatrix();
+    Eigen::Quaterniond q(R);
+    Eigen::Vector3d t(1, 0, 0);
+    Sophus::Sim3d sim3(q, t);
+    std::cout << sim3.matrix() << std::endl << std::endl;
+    sim3.setScale(0.1);
+    td::cout << sim3.matrix() << std::endl << std::endl;
+
     return 0;
 }

@@ -1,11 +1,14 @@
 %YAML:1.0
 ---
-data_type: picture
-video_path: /home/tanrui/slam/slam-learning/data/video/demo1.mp4
-video_w: 900
-video_h: 500
-video_rate: 100
+data_type: video
+video_path: /home/tamray/slam/slam-learning/data/video/demo2.mp4
+video_w: 1400
+video_h: 800
+video_rate: 30
 picture_path: /home/tianru/slam/KITTI/dataset/sequences/01/image_0/
 picture_index_min: 0
 picture_index_max: 1000
 picture_rate: 30
+
+showrods: 1
+

@@ -216,9 +216,14 @@ float Frontend::trackFeaturePoints(cv::Mat & img1, cv::Mat & img2,
         addTrackedPoints(img1, pt1, s, 8);
     }
 
+
     std::vector<float> error;
     cv::calcOpticalFlowPyrLK(img1, img2, pt1, pt2, status, error, 
                     cv::Size(21, 21), 3);
+
+    // 过滤距离近的特征点
+    filterFeaturePoints(img1, pt1, status, 10);
+
     // 忽略特征点（0，0）的匹配
     for (uint i = 0; i < FeaturePointNum; i++) {
         if (pt1[i].x == 0 && pt1[i].y == 0) {
@@ -227,8 +232,10 @@ float Frontend::trackFeaturePoints(cv::Mat & img1, cv::Mat & img2,
         }
     }
 
+    // 过滤距离远的匹配点
     float f = flterMatchingPoints(pt1, pt2, status, 10000);
 
+    // 添加跟踪点
     addTrackedPoints(img2, pt2, status);
 
     return f;
@@ -344,6 +351,71 @@ void Frontend::flterTrackedPoints() {
 }
 
 
+void Frontend::filterFeaturePoints(cv::Mat & img, 
+                         std::vector<cv::Point2f> & pt,
+                         std::vector<uchar> & status,
+                         int min_distance)
+{
+    cv::Mat mask = cv::Mat::zeros(img.rows, img.cols, CV_8UC1);
+    for (uint i = 0; i < status.size(); i++) {
+        if (status[i]) {
+            int x = pt[i].x;
+            int y = pt[i].y;
+            if (x <= 0 || x >= mask.cols || 
+                y <= 0 || y >= mask.rows) {
+                status[i] = 0;
+                continue;
+            }
+            uchar * ptr = mask.ptr<uchar>(y);
+            ptr[x] = 1;
+        }
+    }
+
+    for (uint i = 0; i < status.size(); i++) {
+        if (status[i]) {
+            int x = pt[i].x;
+            int y = pt[i].y;
+            // 把原来位置的点置0
+            uchar * ptr = mask.ptr<uchar>(y);
+            ptr[x] = 0;
+
+            int x_min, x_max;
+            int y_min, y_max;
+
+            x_min = x - min_distance;
+            if (x_min < 0) x_min = 0;
+
+            x_max = x + min_distance;
+            if (x_max > img.cols - 1) x_max = img.cols - 1;
+
+            y_min = y - min_distance;
+            if (y_min < 0) y_min = 0;
+
+            y_max = y + min_distance;
+            if (y_max > img.rows) y_max = img.rows;
+            
+            bool suit_point = true;
+            for (int y = y_min; y < y_max; y++) {
+                uchar * ptr = mask.ptr<uchar>(y);
+                for (int x = x_min; x < x_max; x++) {
+                    if (ptr[x] == 1) {
+                        suit_point = false;
+                        break;
+                    }
+                }
+                if (!suit_point) break;
+            }
+            if (suit_point) {
+                uchar * ptr = mask.ptr<uchar>(y);
+                ptr[x] = 1;
+            } else {
+                status[i] = 0;
+            }
+        }
+    }
+
+
+}
 
 
 void Frontend::showPicture()

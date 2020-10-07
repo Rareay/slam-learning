@@ -27,7 +27,7 @@ int main()
     trslam::Viewer viewer;
     viewer.ViewPositon();
     
-    trslam::Frontend frontend(3, 100);
+    trslam::Frontend frontend(3, 300);
 
     cv::Mat img;
     while (1) {

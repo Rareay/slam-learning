@@ -40,8 +40,12 @@ struct Framefeature
 };
 
 
+/** @brief 地图点：位姿、路标、帧特征
+ */
 class Mappoint {
 public:
+    /** @brief 创建、初始化地图点
+     */
     static void createMappoint();
 
     void pushPosture(Postrue posture);

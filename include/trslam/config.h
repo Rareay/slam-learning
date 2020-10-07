@@ -37,6 +37,10 @@ class Config {
     static bool SetParameterFile(const std::string &filename);
 
     /** @brief 读取值
+     * 
+     *  @code
+     *  std::string type = Config::Get<std::string>("data_type");
+     *  @endcode
      */
     template <typename T>
     static T Get(const std::string &key) {
