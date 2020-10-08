@@ -51,6 +51,7 @@ public:
     void pushPosture(Postrue posture);
     void erasePosture(uint remain_num);
     void readPostrue(std::vector<Postrue> & postures);
+    void readOnePosture(uint id, Postrue & posturue);
     void refreshPosture(std::vector<Postrue> & postures);
 
     void pushRoadsign(Roadsign roadsign);
@@ -61,11 +62,13 @@ public:
     void pushFramefeature(Framefeature feature);
     void eraseFramefeature(uint remain_num);
     void readFramefeature(std::vector<Framefeature> & features);
+    void readOneFramefeature(uint id, Framefeature & feature);
     void refreshFramefeature(std::vector<Framefeature> & features);
 
     void pushKeyframe(uint id);
     void eraseKeyframe(uint remain_num);
     void readKeyframe(std::vector<uint> & ids);
+    void readLastKeyframe(uint & id);
     void refreshKeyframe(std::vector<uint> & ids);
 
 private:

@@ -42,6 +42,18 @@ void Mappoint::readPostrue(std::vector<Postrue> & postures)
     postures.swap(temp);
 }
 
+void Mappoint::readOnePosture(uint id, Postrue & posturue)
+{
+    boost::shared_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_posture); // 共享
+    posturue.id = 0;
+    for (uint i = 0; i < Mappoint::mMappoint->mPostures.size(); i++) {
+        if (Mappoint::mMappoint->mPostures[i].id == id) {
+            Postrue p(Mappoint::mMappoint->mPostures[i]);
+            posturue = p;
+        }
+    }
+}
+
 void Mappoint::refreshPosture(std::vector<Postrue> & postures)
 {
     boost::unique_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_posture); // 独占
@@ -105,7 +117,20 @@ void Mappoint::readFramefeature(std::vector<Framefeature> & features)
     boost::shared_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_frame); // 共享
     std::vector<Framefeature> temp(Mappoint::mMappoint->mFramefeatures);
     features.swap(temp);
+}
 
+void Mappoint::readOneFramefeature(uint id, Framefeature & feature)
+{
+    boost::shared_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_frame); // 共享
+    feature.id = 0;
+    feature.ptr.clear();
+    feature.ptr_rods.clear();
+    for (uint i = 0; i < Mappoint::mMappoint->mFramefeatures.size(); i++) {
+        if (Mappoint::mMappoint->mFramefeatures[i].id == id) {
+            Framefeature f(Mappoint::mMappoint->mFramefeatures[i]);
+            feature = f;
+        }
+    }
 }
 void Mappoint::refreshFramefeature(std::vector<Framefeature> & features)
 {
@@ -138,8 +163,19 @@ void Mappoint::readKeyframe(std::vector<uint> & keyframes)
     boost::shared_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_keyframe); // 共享
     std::vector<uint> temp(Mappoint::mMappoint->mKeyframe);
     keyframes.swap(temp);
-
 }
+
+void Mappoint::readLastKeyframe(uint & id)
+{
+    boost::shared_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_keyframe); // 共享
+    uint l = Mappoint::mMappoint->mKeyframe.size();
+    if (l < 1) {
+        id = 0;
+    } else {
+        id = Mappoint::mMappoint->mKeyframe[l - 1];
+    }
+}
+
 void Mappoint::refreshKeyframe(std::vector<uint> & keyframes)
 {
     boost::unique_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_keyframe); // 独占
