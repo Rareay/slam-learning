@@ -15,53 +15,13 @@ void Mappoint::createMappoint()
 {
     if (mMappoint == nullptr) {
         mMappoint = std::shared_ptr<Mappoint>(new Mappoint);
+    
+        //KeyFrame firstKeyFrame;
+        //firstKeyFrame.id = 0;
+        //mMappoint->pushKeyFrame(firstKeyFrame);
     }
+
 }
-
-void Mappoint::pushPosture(Postrue posture)
-{
-    boost::unique_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_posture); // 独占
-    Mappoint::mMappoint->mPostures.push_back(posture);
-}
-
-void Mappoint::erasePosture(uint remain_num)
-{
-    boost::unique_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_posture); // 独占
-    if (Mappoint::mMappoint->mPostures.size() <= remain_num) {
-        return ;
-    }
-    uint delete_num = Mappoint::mMappoint->mPostures.size() - remain_num;
-    Mappoint::mMappoint->mPostures.erase(Mappoint::mMappoint->mPostures.begin(), 
-                               Mappoint::mMappoint->mPostures.begin() + delete_num);
-}
-
-void Mappoint::readPostrue(std::vector<Postrue> & postures)
-{
-    boost::shared_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_posture); // 共享
-    std::vector<Postrue> temp(Mappoint::mMappoint->mPostures);
-    postures.swap(temp);
-}
-
-void Mappoint::readOnePosture(uint id, Postrue & posturue)
-{
-    boost::shared_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_posture); // 共享
-    posturue.id = 0;
-    for (uint i = 0; i < Mappoint::mMappoint->mPostures.size(); i++) {
-        if (Mappoint::mMappoint->mPostures[i].id == id) {
-            Postrue p(Mappoint::mMappoint->mPostures[i]);
-            posturue = p;
-        }
-    }
-}
-
-void Mappoint::refreshPosture(std::vector<Postrue> & postures)
-{
-    boost::unique_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_posture); // 独占
-    Mappoint::mMappoint->mPostures.swap(postures);
-}
-
-
-
 
 
 void Mappoint::pushRoadsign(Roadsign roadsign)
@@ -69,7 +29,7 @@ void Mappoint::pushRoadsign(Roadsign roadsign)
     boost::unique_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_roadsign); // 独占
     Mappoint::mMappoint->mRoadsigns.push_back(roadsign);
 }
-void Mappoint::eraseRoadsign(uint remain_num)
+void Mappoint::remainRoadsign(uint remain_num)
 {
     boost::unique_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_roadsign); // 独占
     if (Mappoint::mMappoint->mRoadsigns.size() <= remain_num) {
@@ -94,60 +54,57 @@ void Mappoint::refreshRoadsign(std::vector<Roadsign> & roadsigns)
 }
 
 
-
-
-void Mappoint::pushFramefeature(Framefeature feature)
+void Mappoint::pushComFrame(ComFrame comframe)
 {
-    boost::unique_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_frame); // 独占
-    Mappoint::mMappoint->mFramefeatures.push_back(feature);
+    boost::unique_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_comframe); // 独占
+    Mappoint::mMappoint->mComFrame.push_back(comframe);
 }
-void Mappoint::eraseFramefeature(uint remain_num)
+void Mappoint::remainComFrame(uint remain_num)
 {
-    boost::unique_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_frame); // 独占
-    if (Mappoint::mMappoint->mFramefeatures.size() <= remain_num) {
+    boost::unique_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_comframe); // 独占
+    if (Mappoint::mMappoint->mComFrame.size() <= remain_num) {
         return ;
     }
-    uint delete_num = Mappoint::mMappoint->mFramefeatures.size() - remain_num;
-    Mappoint::mMappoint->mFramefeatures.erase(Mappoint::mMappoint->mFramefeatures.begin(), 
-                            Mappoint::mMappoint->mFramefeatures.begin() + delete_num);
+    uint delete_num = Mappoint::mMappoint->mComFrame.size() - remain_num;
+    Mappoint::mMappoint->mComFrame.erase(Mappoint::mMappoint->mComFrame.begin(), 
+                            Mappoint::mMappoint->mComFrame.begin() + delete_num);
+}
+void Mappoint::readComFrame(std::vector<ComFrame> & comframes)
+{
+    boost::shared_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_comframe); // 共享
+    std::vector<ComFrame> temp(Mappoint::mMappoint->mComFrame);
+    comframes.swap(temp);
 
 }
-void Mappoint::readFramefeature(std::vector<Framefeature> & features)
+void Mappoint::readOneComFrame(uint id, ComFrame & comframe)
 {
-    boost::shared_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_frame); // 共享
-    std::vector<Framefeature> temp(Mappoint::mMappoint->mFramefeatures);
-    features.swap(temp);
-}
-
-void Mappoint::readOneFramefeature(uint id, Framefeature & feature)
-{
-    boost::shared_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_frame); // 共享
-    feature.id = 0;
-    feature.ptr.clear();
-    feature.ptr_rods.clear();
-    for (uint i = 0; i < Mappoint::mMappoint->mFramefeatures.size(); i++) {
-        if (Mappoint::mMappoint->mFramefeatures[i].id == id) {
-            Framefeature f(Mappoint::mMappoint->mFramefeatures[i]);
-            feature = f;
+    boost::shared_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_comframe); // 共享
+    comframe.id = 0;
+    comframe.image.release();
+    comframe.ptr.clear();
+    comframe.ptr_status.clear();
+    for (uint i = 0; i < Mappoint::mMappoint->mComFrame.size(); i++) {
+        if (Mappoint::mMappoint->mComFrame[i].id == id) {
+            ComFrame f(Mappoint::mMappoint->mComFrame[i]);
+            comframe = f;
         }
     }
 }
-void Mappoint::refreshFramefeature(std::vector<Framefeature> & features)
+void Mappoint::refreshComFrame(std::vector<ComFrame> & comframes)
 {
+    boost::unique_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_comframe); // 独占
+    Mappoint::mMappoint->mComFrame.swap(comframes);
 
-    boost::unique_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_frame); // 独占
-    Mappoint::mMappoint->mFramefeatures.swap(features);
 }
 
 
 
-
-void Mappoint::pushKeyframe(uint id)
+void Mappoint::pushKeyFrame(KeyFrame keyframe)
 {
     boost::unique_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_keyframe); // 独占
-    Mappoint::mMappoint->mKeyframe.push_back(id);
+    Mappoint::mMappoint->mKeyframe.push_back(keyframe);
 }
-void Mappoint::eraseKeyframe(uint remain_num)
+void Mappoint::remainKeyFrame(uint remain_num)
 {
     boost::unique_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_keyframe); // 独占
     if (Mappoint::mMappoint->mKeyframe.size() <= remain_num) {
@@ -156,27 +113,25 @@ void Mappoint::eraseKeyframe(uint remain_num)
     uint delete_num = Mappoint::mMappoint->mKeyframe.size() - remain_num;
     Mappoint::mMappoint->mKeyframe.erase(Mappoint::mMappoint->mKeyframe.begin(), 
                                Mappoint::mMappoint->mKeyframe.begin() + delete_num);
-
 }
-void Mappoint::readKeyframe(std::vector<uint> & keyframes)
+void Mappoint::readKeyFrame(std::vector<KeyFrame> & keyframes)
 {
     boost::shared_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_keyframe); // 共享
-    std::vector<uint> temp(Mappoint::mMappoint->mKeyframe);
+    std::vector<KeyFrame> temp(Mappoint::mMappoint->mKeyframe);
     keyframes.swap(temp);
 }
-
-void Mappoint::readLastKeyframe(uint & id)
+void Mappoint::readLastKeyFrame(KeyFrame & keyframe)
 {
     boost::shared_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_keyframe); // 共享
     uint l = Mappoint::mMappoint->mKeyframe.size();
     if (l < 1) {
-        id = 0;
+        keyframe.id = 0;
     } else {
-        id = Mappoint::mMappoint->mKeyframe[l - 1];
+        KeyFrame temp(Mappoint::mMappoint->mKeyframe[l - 1]);
+        keyframe = temp;
     }
 }
-
-void Mappoint::refreshKeyframe(std::vector<uint> & keyframes)
+void Mappoint::refreshKeyFrame(std::vector<KeyFrame> & keyframes)
 {
     boost::unique_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_keyframe); // 独占
     Mappoint::mMappoint->mKeyframe.swap(keyframes);

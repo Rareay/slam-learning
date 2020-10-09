@@ -16,32 +16,36 @@ Frontend::Frontend(int frame_num, int point_num, bool show) {
     {
         std::vector<uchar> temp(point_num, 0);
         //temp.swap(frontStatus);
-        temp.swap(frontFrame_.feature_match);
+        temp.swap(frontFrame_.ptr_status);
     }
     {
         std::vector<uint> temp(point_num, 0);
         temp.swap(mRoasid);
     }
     mShow = show;
+    frontFrame_.id = 0;
+    frontFrame__.id = 0;
+    resetTrackStatus();
+    TrackRate = Config::Get<float>("trackrate");
 }
 
 void Frontend::FrontendCalculate(cv::Mat img) {
-    trslam::Frame frame;
+    ComFrame frame;
     frame.image = img;
     frame.id = id;
     std::cout << "id: " << id << std::endl;
     id ++;
     if (CacheFrames.size() < 1) { // 如果缓存帧为空，追加当前帧后就返回
         std::vector<uchar> status(FeaturePointNum, 0);
-        frame.feature_match = status;
+        frame.ptr_status = status;
         CacheFrames.push_back(frame);
         return ;
     }
     // 根据缓存的最后一帧和当前帧计算当前帧的特征点
     uint l = CacheFrames.size();
     trackFeaturePoints(CacheFrames[l-1].image, frame.image,
-                                    CacheFrames[l-1].feature, frame.feature,
-                                    frame.feature_match);
+                                    CacheFrames[l-1].ptr  , frame.ptr,
+                                    frame.ptr_status);
 
     if (CacheFrames.size() < CacheFrameNum) { // 如果缓存帧未满，追加当前帧后就返回
         CacheFrames.push_back(frame);
@@ -59,29 +63,56 @@ void Frontend::FrontendCalculate(cv::Mat img) {
     // 过滤出特征点
     flterTrackedPoints();
 
-    if (frontFrame__.id == -1) {
+    if (frontFrame__.id < 1) {
         return;
     }
-    // 计算位姿
-    estimatePose_2d2d(frontFrame__.feature,
-                        frontFrame_.feature,
-                        frontFrame_.feature_match,
-                        frontFrame__.pose,
-                        frontFrame_.pose);
 
-    // 刷新地图路标
-    refreshRoasid(frontFrame__.feature,
-                  frontFrame_.feature,
-                  frontFrame__.feature_match,
-                  frontFrame_.feature_match,
-                  frontFrame__.pose,
-                  frontFrame_.pose);
+
+    // 获取特征点丢失率
+    float track_rate = _status_and(frame.ptr_status, TrackStatus);
+
+    // 关键帧
+    if (track_rate < TrackRate) {
+        KeyFrame keyframe;
+        keyframe.id = id;
+        keyframe.ptr = frame.ptr;
+        keyframe.ptr_status = TrackStatus;
+
+        KeyFrame lastkeyframe;
+        mMappoint.readLastKeyFrame(lastkeyframe);
+
+        if (lastkeyframe.id != 0) { // 如果第一个关键帧还没有初始化
+            // 计算位姿
+            estimatePose_2d2d(lastkeyframe.ptr,
+                              keyframe.ptr,
+                              keyframe.ptr_status,
+                              lastkeyframe.T,
+                              keyframe.T);
+            
+            // 计算路标点
+            refreshRoasid(lastkeyframe.ptr,
+                          keyframe.ptr,
+                          lastkeyframe.ptr_status,
+                          keyframe.ptr_status,
+                          lastkeyframe.T,
+                          keyframe.T);
+            
+            keyframe.ptr_rods = mRoasid;
+        }
+
+        // 添加关键帧            
+        mMappoint.pushKeyFrame(keyframe);
+
+        // 重置 TrackStatus 变量
+        resetTrackStatus(); 
+    }
                   
-    // 刷新地图位姿
-    refreshPosture(id, frontFrame_.pose);
-
-    // 刷新地图帧特征
-    refreshFramefeature(id, frontFrame_.feature, frontFrame_.feature_match);
+    // 添加普通帧
+    ComFrame comframe;
+    comframe.id = id;
+    comframe.ptr = frame.ptr;
+    comframe.ptr_status = frame.ptr_status;
+    mMappoint.pushComFrame(comframe);
 
     showPicture();
 }
@@ -137,32 +168,6 @@ void Frontend::refreshRoasid(std::vector<cv::Point2f> & ptr1,
 }
 
 
-void Frontend::refreshPosture(uint id, SE3 pose)
-{
-    Postrue p;
-    p.id = id;
-    p.pose = pose;
-    mMappoint.pushPosture(p);
-}
-
-void Frontend::refreshFramefeature(uint id,
-                             std::vector<cv::Point2f> & ptr,
-                             std::vector<uchar> & statue)
-{
-    std::vector<cv::Point2f> p;
-    std::vector<uint> p_rods;
-    for (uint i = 0; i < statue.size(); i++) {
-        if (statue[i] == 1) {
-            p.push_back(ptr[i]);
-            p_rods.push_back(mRoasid[i]);
-        }
-    }
-    Framefeature framefeature;
-    framefeature.id = id;
-    framefeature.ptr = p;
-    framefeature.ptr_rods = p_rods;
-    mMappoint.pushFramefeature(framefeature);
-}
 
 
 
@@ -232,7 +237,7 @@ float Frontend::trackFeaturePoints(cv::Mat & img1, cv::Mat & img2,
         }
     }
 
-    // 过滤距离远的匹配点
+    // 过滤匹配距离远的点
     float f = flterMatchingPoints(pt1, pt2, status, 10000);
 
     // 添加跟踪点
@@ -338,12 +343,11 @@ void Frontend::addTrackedPoints(cv::Mat & img, std::vector<cv::Point2f> & pt,
 
 void Frontend::flterTrackedPoints() {
     if (CacheFrames.size() != CacheFrameNum) return;
-    std::vector<uchar> status(FeaturePointNum);
     for (uint i = 0; i < FeaturePointNum; i++) {
         for (uint j = 0; j < CacheFrameNum; j++) {
-            if (CacheFrames[j].feature_match[i] != 0) continue;
-            if (frontFrame__.feature_match[i] == 0) {
-                frontFrame_.feature_match[i] = 0;
+            if (CacheFrames[j].ptr_status[i] != 0) continue;
+            if (frontFrame__.ptr_status[i] == 0) {
+                frontFrame_.ptr_status[i] = 0;
             }
             break;
         }
@@ -421,9 +425,9 @@ void Frontend::filterFeaturePoints(cv::Mat & img,
 void Frontend::showPicture()
 {
     cv::Mat img = frontFrame_.image.clone();
-    std::vector<cv::Point2f> pt1 = frontFrame__.feature;
-    std::vector<cv::Point2f> pt2 = frontFrame_.feature;
-    std::vector<uchar> s = frontFrame_.feature_match;
+    std::vector<cv::Point2f> pt1 = frontFrame__.ptr;
+    std::vector<cv::Point2f> pt2 = frontFrame_.ptr;
+    std::vector<uchar> s = frontFrame_.ptr_status;
     for (uint i = 0; i < s.size(); i++) {
         if (s[i]) {
             cv::circle(img, pt2[i], 1, cv::Scalar(50, 0, 200), 2);
@@ -433,6 +437,35 @@ void Frontend::showPicture()
     cv::imshow("dataset", img);
     if (cv::waitKey(1) >= 0) exit(0);
 }
+
+
+float Frontend::_status_and(std::vector<uchar> & s1, 
+                            std::vector<uchar> & s2)
+{
+    uint n = 0;
+    for (uint i = 0; i < s2.size(); i++) {
+        if (s1[i] && s2[i]) {
+            s2[i] = 1;
+            n++;
+        } else {
+            s2[i] = 0;
+        }
+    }
+    return (float)n / (float)s2.size();
+}
+
+
+void Frontend::resetTrackStatus()
+{
+    std::vector<uchar> temp(FeaturePointNum, 1);
+    temp.swap(TrackStatus);
+}
+
+
+
+
+
+
 
 
 

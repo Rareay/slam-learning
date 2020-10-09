@@ -11,6 +11,7 @@
 #include "trslam/frame.h"
 #include "trslam/mappoint.h"
 #include "trslam/camera.h"
+#include "trslam/config.h"
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -25,13 +26,15 @@ public:
     Camera mCamera;
     std::vector<uint> mRoasid;
     uint mRoasidMax = 0;
-    uint id = 0;
+    uint id = 1;
     uint CacheFrameNum; // 缓存帧数
     uint FeaturePointNum; // 每帧特征点最大个数
-    std::vector<trslam::Frame> CacheFrames;
-    trslam::Frame frontFrame_; // 缓存的上一帧,也是输出的最新帧
-    trslam::Frame frontFrame__;// 缓存的上上帧
+    std::vector<ComFrame> CacheFrames;
+    ComFrame frontFrame_; // 缓存的上一帧,也是输出的最新帧
+    ComFrame frontFrame__;// 缓存的上上帧
     bool mShow = true;
+    std::vector<uchar> TrackStatus;
+    float TrackRate;
 
     Frontend(int frame_num, int point_num, bool show = true);
 
@@ -55,13 +58,13 @@ public:
 
     /** @brief 更新地图帧特征
      */
-    void refreshPosture(uint id, SE3 pose);
+    //void refreshPosture(uint id, SE3 pose);
 
     /** @brief 更新地图帧特征
      */
-    void refreshFramefeature(uint id,
-                             std::vector<cv::Point2f> & ptr1,
-                             std::vector<uchar> & statue1);
+    //void refreshFramefeature(uint id,
+    //                         std::vector<cv::Point2f> & ptr1,
+    //                         std::vector<uchar> & statue1);
 
     
     /** @brief 位姿计算
@@ -120,7 +123,10 @@ public:
     void showPicture();
 
 private:
+    float _status_and(std::vector<uchar> & s1, 
+                      std::vector<uchar> & s2);
 
+    void resetTrackStatus();
 };
 
 }
