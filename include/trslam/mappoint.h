@@ -56,6 +56,7 @@ public:
     void pushRoadsign(Roadsign roadsign);
     void remainRoadsign(uint remain_num);
     void readRoadsign(std::vector<Roadsign> & roadsigns);
+    void readOneRoadsign(uint id, Roadsign & roadsign);
     void refreshRoadsign(std::vector<Roadsign> & roadsigns);
 
     void pushComFrame(ComFrame comframe);

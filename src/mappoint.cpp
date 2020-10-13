@@ -46,6 +46,19 @@ void Mappoint::readRoadsign(std::vector<Roadsign> & roadsigns)
     roadsigns.swap(temp);
 
 }
+
+void Mappoint::readOneRoadsign(uint id, Roadsign & roadsign)
+{
+    boost::shared_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_roadsign); // 共享
+    roadsign.id = 0;
+    for (uint i = Mappoint::mMappoint->mRoadsigns.size(); i > 0; i--) {
+        if (Mappoint::mMappoint->mRoadsigns[i-1].id == id) {
+            Roadsign road(Mappoint::mMappoint->mRoadsigns[i-1]);
+            roadsign = road;
+        }
+    }
+}
+
 void Mappoint::refreshRoadsign(std::vector<Roadsign> & roadsigns)
 {
     boost::unique_lock<boost::shared_mutex> m(Mappoint::mMappoint->shr_mutex_roadsign); // 独占

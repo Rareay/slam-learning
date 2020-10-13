@@ -4,6 +4,7 @@
 #include "trslam/viewer.h"
 #include "trslam/config.h"
 #include "trslam/dataset.h"
+#include "trslam/backend.h"
 
 #include <pangolin/pangolin.h>
 #include <Eigen/Core>
@@ -26,6 +27,9 @@ int main()
 
     trslam::Viewer viewer;
     viewer.ViewPositon();
+
+    trslam::Backend backend(5);
+    backend.startOptimization();
     
     trslam::Frontend frontend(3, 300);
 

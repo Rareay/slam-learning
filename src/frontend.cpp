@@ -97,7 +97,9 @@ void Frontend::FrontendCalculate(cv::Mat img) {
                           lastkeyframe.T,
                           keyframe.T);
             
-            keyframe.ptr_rods = mRoasid;
+            std::vector<uint> rods(mRoasid);
+            keyframe.ptr_rods = rods;
+            //std::cout << keyframe.ptr_rods.size() << "---------" << std::endl;
         }
 
         // 添加关键帧            
