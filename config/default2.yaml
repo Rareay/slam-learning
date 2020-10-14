@@ -8,7 +8,7 @@ video_rate: 30
 picture_path: /home/tianru/slam/KITTI/dataset/sequences/01/image_0/
 picture_index_min: 0
 picture_index_max: 1000
-picture_rate: 100
+picture_rate: 500
 
 showrods: 1
 trackrate: 0.4

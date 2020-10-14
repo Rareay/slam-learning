@@ -43,8 +43,17 @@ private:
         std::vector<KeyFrame> keyframes;
         mMappoint.readKeyFrame(keyframes);
         if (keyframes.size() < mCameras) return;
+
+        //for (uint i = 0; i < keyframes.size(); i++) {
+        //    std::cout << keyframes[i].T.matrix3x4() << std::endl;
+        //}
         uint index_start = keyframes.size() - mCameras + 1;
         uint index_end   = keyframes.size();
+        uint keyframes_id_max = 0;
+        for (uint i = 0; i < keyframes.size(); i++) {
+            keyframes_id_max = keyframes_id_max > keyframes[i].id ? 
+                               keyframes_id_max : keyframes[i].id + 1; 
+        }
 
         for (uint i = index_start; i < index_end; i++) {
             for (uint j = 0; j < keyframes[i].ptr_status.size(); j++) {
@@ -52,7 +61,7 @@ private:
                     VertexPoint * p = nullptr;
                     vertex_points.insert( // 插入
                         std::map<uint, VertexPoint *>::value_type(
-                        keyframes.size() + keyframes[i].ptr_rods[j], p));
+                        keyframes_id_max + keyframes[i].ptr_rods[j], p));
                 }
             }
         }
@@ -61,7 +70,7 @@ private:
             // 路标顶点
             VertexPoint *v_point = new VertexPoint();
             Roadsign roadsign;
-            mMappoint.readOneRoadsign(iter->first - keyframes.size(), roadsign);
+            mMappoint.readOneRoadsign(iter->first - keyframes_id_max, roadsign);
             v_point->setId(iter->first);
             v_point->setEstimate(roadsign.rods);
             v_point->setMarginalized(true);
@@ -72,12 +81,12 @@ private:
         for (uint i = index_start; i < index_end; i++) { // 遍历需要优化的关键帧
             // 位姿顶点
             VertexPoseAndIntrinsics *v_carmera = new VertexPoseAndIntrinsics();
-            v_carmera->setId(i); // 设置相机id
+            v_carmera->setId(keyframes[i].id); // 设置相机id
             v_carmera->setEstimate(PoseAndIntrinsics(keyframes[i].T));
             optimizer.addVertex(v_carmera);
             vertex_pose_intrinsics.insert(
                 std::map<uint, VertexPoseAndIntrinsics *>::value_type(
-                i, v_carmera));
+                keyframes[i].id, v_carmera));
 
             for(uint j = 0; j < keyframes[i].ptr_status.size(); j++) {
                 if (keyframes[i].ptr_status[j]) {
@@ -111,9 +120,12 @@ private:
             for (uint i = 0; i < roadsigns.size(); i++) {
                 if (roadsigns[i].id == iter_road->first - keyframes.size()) {
                     roadsigns[i].rods = iter_road->second->estimate();
+                    //std::cout << "路标" << roadsigns[i].id << ": " << roadsigns[i].rods << std::endl;
                 }
             }
         }
+        mMappoint.refreshRoadsign(roadsigns);
+
         std::map<uint, VertexPoseAndIntrinsics *>::iterator iter_carmer;
         for (iter_carmer = vertex_pose_intrinsics.begin(); 
              iter_carmer != vertex_pose_intrinsics.end(); 
@@ -125,14 +137,16 @@ private:
                     pose = iter_carmer->second->estimate();
                     pose.set_to(T);
                     keyframes[i].T = T;
+                    //std::cout << "位姿" << keyframes[i].id << ": \n" <<keyframes[i].T.matrix3x4() << std::endl;
                 }
             }
         }
-
         last_keyframe_id = keyframes[keyframes.size()-1].id;
-
         unsigned int t_end = boost::get_system_time().time_of_day().total_milliseconds();
         std::cout << "Save BA use " << t_end - t_start << " ms." << std::endl;
+        mMappoint.refreshKeyFrame(keyframes);
+
+
     }
     void doOptimization() {
         boost::try_mutex::scoped_try_lock lock(m_iomutex);

@@ -28,7 +28,7 @@ int main()
     trslam::Viewer viewer;
     viewer.ViewPositon();
 
-    trslam::Backend backend(5);
+    trslam::Backend backend(4);
     backend.startOptimization();
     
     trslam::Frontend frontend(3, 300);
